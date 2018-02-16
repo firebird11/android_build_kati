@@ -277,6 +277,18 @@ class DirentDirNode : public DirentNode {
       return true;
     }
 
+    if (fc.type == FindCommandType::FINDLEAVES) {
+      struct stat st;
+      if (stat(path->c_str(), &st)) {
+        PERROR("stat for %s", path->c_str());
+      }
+      devino di(st.st_dev, st.st_ino);
+      if (fc.read_inos->find(di) != fc.read_inos->end()) {
+        return true;
+      }
+      fc.read_inos->insert(di);
+    }
+
     fc.read_dirs->insert(*path);
 
     if (fc.prune_cond && fc.prune_cond->IsTrue(*path, DT_DIR)) {
@@ -1046,7 +1058,8 @@ FindCommand::FindCommand()
     : follows_symlinks(false), depth(INT_MAX), mindepth(INT_MIN),
       redirect_to_devnull(false),
       found_files(new vector<string>()),
-      read_dirs(new unordered_set<string>()) {
+      read_dirs(new unordered_set<string>()),
+      read_inos(new unordered_set<devino>()) {
 }
 
 FindCommand::~FindCommand() {

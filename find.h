@@ -15,6 +15,8 @@
 #ifndef FIND_H_
 #define FIND_H_
 
+#include <sys/stat.h>
+
 #include <memory>
 #include <string>
 #include <unordered_set>
@@ -32,6 +34,27 @@ enum struct FindCommandType {
   FINDLEAVES,
   LS,
 };
+
+class devino {
+public:
+  devino(dev_t dev, ino_t ino) : dev_(dev), ino_(ino) {}
+  bool operator==(const devino& other) const {
+      return (dev_ == other.dev_ && ino_ == other.ino_);
+  }
+  dev_t dev() const { return dev_; }
+  ino_t ino() const { return ino_; }
+
+private:
+  dev_t dev_;
+  ino_t ino_;
+};
+
+namespace std {
+template<>
+struct hash<devino> {
+  std::size_t operator()(const devino& k) const { return (k.dev() ^ k.ino()); }
+};
+}
 
 struct FindCommand {
   FindCommand();
@@ -52,6 +75,7 @@ struct FindCommand {
 
   unique_ptr<vector<string>> found_files;
   unique_ptr<unordered_set<string>> read_dirs;
+  unique_ptr<unordered_set<devino>> read_inos;
 
  private:
   FindCommand(const FindCommand&) = delete;
