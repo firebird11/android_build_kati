@@ -18,6 +18,7 @@
 
 #include <string>
 #include <unistd.h>
+#include <stdlib.h>
 
 #include "fileutil.h"
 #include "strutil.h"
